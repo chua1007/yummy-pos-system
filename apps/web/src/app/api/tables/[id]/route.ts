@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
-import QRCode from 'qrcode';
+
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const db = getDb();
+  const table = db.prepare('SELECT * FROM tables WHERE id = ?').get(params.id);
+  if (!table) return NextResponse.json({ error: 'Table not found' }, { status: 404 });
+  return NextResponse.json(table);
+}
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const db = getDb();

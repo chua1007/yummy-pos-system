@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const id = uuid();
 
   // Generate QR code as data URL
-  const qrData = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/order/${id}`;
+  const qrData = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://56.69.41.130'}/order/${id}`;
   const qrCodeUrl = await QRCode.toDataURL(qrData, { width: 300, margin: 2, color: { dark: '#0f172a', light: '#ffffff' } });
 
   db.prepare(
