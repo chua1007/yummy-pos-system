@@ -147,6 +147,21 @@ function initializeDatabase() {
   try { db.exec('ALTER TABLE orders ADD COLUMN payment_status TEXT DEFAULT "unpaid"'); } catch {}
   try { db.exec('ALTER TABLE orders ADD COLUMN discount_amount INTEGER DEFAULT 0'); } catch {}
 
+  // Tenant isolation - add tenant_id to all tables
+  try { db.exec('ALTER TABLE menu_categories ADD COLUMN tenant_id TEXT'); } catch {}
+  try { db.exec('ALTER TABLE menu_items ADD COLUMN tenant_id TEXT'); } catch {}
+  try { db.exec('ALTER TABLE tables ADD COLUMN tenant_id TEXT'); } catch {}
+  try { db.exec('ALTER TABLE orders ADD COLUMN tenant_id TEXT'); } catch {}
+  try { db.exec('ALTER TABLE inventory ADD COLUMN tenant_id TEXT'); } catch {}
+  try { db.exec('ALTER TABLE customers ADD COLUMN tenant_id TEXT'); } catch {}
+  try { db.exec('ALTER TABLE notifications ADD COLUMN tenant_id TEXT'); } catch {}
+  try { db.exec('ALTER TABLE reservations ADD COLUMN tenant_id TEXT'); } catch {}
+
+  // Remove UNIQUE constraint on table_number (now unique per tenant)
+  try { db.exec("CREATE INDEX IF NOT EXISTS idx_tables_tenant ON tables(tenant_id, table_number)"); } catch {}
+  try { db.exec("CREATE INDEX IF NOT EXISTS idx_orders_tenant ON orders(tenant_id, created_at)"); } catch {}
+  try { db.exec("CREATE INDEX IF NOT EXISTS idx_menu_tenant ON menu_items(tenant_id)"); } catch {}
+
   // Seed data if empty
   const categoryCount = db.prepare('SELECT COUNT(*) as count FROM menu_categories').get() as any;
   if (categoryCount.count === 0) {

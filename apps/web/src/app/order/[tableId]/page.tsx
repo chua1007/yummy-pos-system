@@ -30,18 +30,28 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
   const [orderNumber, setOrderNumber] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [tableName, setTableName] = useState('');
+  const [tableTenantId, setTableTenantId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch menu
-    fetch('/api/menu').then((r) => r.json()).then((data) => {
-      setCategories(data.categories);
-      setItems(data.items.filter((i: MenuItem) => i.is_available));
-      setLoading(false);
-    });
-    // Fetch table info
+    // Fetch menu (with tenant filter from table)
     fetch(`/api/tables/${params.tableId}`).then((r) => r.json()).then((data) => {
       if (data.table_number) setTableName(data.table_number);
-    }).catch(() => {});
+      if (data.tenant_id) setTableTenantId(data.tenant_id);
+      // Fetch menu for this tenant
+      const menuUrl = data.tenant_id ? `/api/menu?tenant_id=${data.tenant_id}` : '/api/menu';
+      fetch(menuUrl).then((r) => r.json()).then((menuData) => {
+        setCategories(menuData.categories);
+        setItems(menuData.items.filter((i: MenuItem) => i.is_available));
+        setLoading(false);
+      });
+    }).catch(() => {
+      // Fallback: load all menu
+      fetch('/api/menu').then((r) => r.json()).then((data) => {
+        setCategories(data.categories);
+        setItems(data.items.filter((i: MenuItem) => i.is_available));
+        setLoading(false);
+      });
+    });
   }, [params.tableId]);
 
   const addToCart = (item: MenuItem) => {
@@ -82,6 +92,7 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
         type: 'dine_in',
         table_number: tableName,
         customer_name: customerName || 'QR Customer',
+        tenant_id: tableTenantId,
         items: cart.map((c) => ({ menu_item_id: c.item.id, quantity: c.quantity, notes: c.notes })),
       }),
     });

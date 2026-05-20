@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Menu, Moon, Sun, Bell, Search, X } from 'lucide-react';
+import { Menu, Moon, Sun, Bell, Search, X, LogOut } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Notification {
@@ -15,9 +17,13 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
   const { resolvedTheme, setTheme } = useTheme();
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
 
   const fetchNotifications = async () => {
     try {
@@ -30,9 +36,21 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000); // Poll every 10s
+    // Fetch user info
+    fetch('/api/auth/me').then((r) => r.json()).then((data) => {
+      if (data.user) {
+        setUserName(data.user.name || '');
+        setUserEmail(data.user.email || '');
+      }
+    }).catch(() => {});
+    const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+  };
 
   const markAllRead = async () => {
     await fetch('/api/notifications', {
@@ -147,9 +165,25 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
           </AnimatePresence>
         </div>
 
-        <button className="ml-2 h-8 w-8 rounded-full bg-[rgb(var(--color-brand-500))] flex items-center justify-center text-white text-sm font-medium">
-          A
-        </button>
+        {/* User Avatar */}
+        <div className="relative ml-2">
+          <button onClick={() => setShowUserMenu(!showUserMenu)} className="h-8 w-8 rounded-full bg-[rgb(var(--color-brand-500))] flex items-center justify-center text-white text-sm font-medium">
+            {userName.charAt(0).toUpperCase()}
+          </button>
+          <AnimatePresence>
+            {showUserMenu && (
+              <motion.div initial={{ opacity: 0, y: -5, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -5, scale: 0.95 }} className="absolute right-0 top-10 z-50 w-48 rounded-lg border border-[rgb(var(--color-border-default))] bg-[rgb(var(--color-surface-primary))] shadow-lg py-1">
+                <div className="px-3 py-2 border-b border-[rgb(var(--color-border-default))]">
+                  <p className="text-sm font-medium text-[rgb(var(--color-text-primary))]">{userName}</p>
+                  <p className="text-xs text-[rgb(var(--color-text-tertiary))]">{userEmail}</p>
+                </div>
+                <Link href="/dashboard/profile" onClick={() => setShowUserMenu(false)} className="block px-3 py-2 text-sm text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))]">My Profile</Link>
+                <Link href="/dashboard/settings" onClick={() => setShowUserMenu(false)} className="block px-3 py-2 text-sm text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))]">Settings</Link>
+                <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2"><LogOut className="h-3.5 w-3.5" />Logout</button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </header>
   );

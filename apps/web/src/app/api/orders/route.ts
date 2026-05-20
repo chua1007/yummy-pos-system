@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
+import { getTenantId } from '@/lib/tenant';
 import { v4 as uuid } from 'uuid';
 
 export async function GET(req: NextRequest) {
   const db = getDb();
+  const tenantId = getTenantId();
   const status = req.nextUrl.searchParams.get('status');
+  const queryTenant = req.nextUrl.searchParams.get('tenant_id');
+  const effectiveTenant = tenantId || queryTenant;
 
-  let query = 'SELECT * FROM orders';
+  let query = 'SELECT * FROM orders WHERE 1=1';
   const params: any[] = [];
 
+  if (effectiveTenant) {
+    query += ' AND (tenant_id = ? OR tenant_id IS NULL)';
+    params.push(effectiveTenant);
+  }
+
   if (status && status !== 'all') {
-    query += ' WHERE status = ?';
+    query += ' AND status = ?';
     params.push(status);
   }
 
@@ -18,7 +27,6 @@ export async function GET(req: NextRequest) {
 
   const orders = db.prepare(query).all(...params);
 
-  // Get items for each order
   const ordersWithItems = orders.map((order: any) => {
     const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
     return { ...order, items };
@@ -29,13 +37,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const db = getDb();
+  const tenantId = getTenantId();
   const body = await req.json();
+  // Allow tenant_id from body (for QR orders)
+  const effectiveTenant = tenantId || body.tenant_id || null;
 
   const id = uuid();
   const orderCount = (db.prepare('SELECT COUNT(*) as count FROM orders').get() as any).count;
   const orderNumber = `ORD-${String(orderCount + 1).padStart(4, '0')}`;
 
-  // Calculate totals
   let subtotal = 0;
   const orderItems: any[] = [];
 
@@ -58,12 +68,12 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const taxAmount = Math.round(subtotal * 0.06); // 6% SST
+  const taxAmount = Math.round(subtotal * 0.06);
   const total = subtotal + taxAmount;
 
   const insertOrder = db.prepare(`
-    INSERT INTO orders (id, order_number, type, status, table_number, customer_name, subtotal, tax_amount, total, notes)
-    VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
+    INSERT INTO orders (id, order_number, type, status, table_number, customer_name, subtotal, tax_amount, total, notes, tenant_id)
+    VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const insertItem = db.prepare(`
@@ -72,7 +82,7 @@ export async function POST(req: NextRequest) {
   `);
 
   const createOrder = db.transaction(() => {
-    insertOrder.run(id, orderNumber, body.type || 'dine_in', body.table_number || null, body.customer_name || 'Walk-in', subtotal, taxAmount, total, body.notes || null);
+    insertOrder.run(id, orderNumber, body.type || 'dine_in', body.table_number || null, body.customer_name || 'Walk-in', subtotal, taxAmount, total, body.notes || null, effectiveTenant);
     for (const item of orderItems) {
       insertItem.run(item.id, item.order_id, item.menu_item_id, item.name, item.quantity, item.unit_price, item.subtotal, item.notes);
     }

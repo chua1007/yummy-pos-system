@@ -19,6 +19,7 @@ import { useTheme } from '@/components/theme-provider';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/components/language-provider';
+import { useEffect, useState } from 'react';
 
 interface DashboardSidebarProps {
   collapsed: boolean;
@@ -43,6 +44,17 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
   const { resolvedTheme } = useTheme();
   const { t } = useLanguage();
   const logoSrc = resolvedTheme === 'dark' ? '/yummy_dark_mode.png' : '/yummy_logo.png';
+  const [userName, setUserName] = useState('');
+  const [tenantName, setTenantName] = useState('');
+
+  useEffect(() => {
+    fetch('/api/auth/me').then((r) => r.json()).then((data) => {
+      if (data.user) {
+        setUserName(data.user.name || '');
+        setTenantName(data.user.tenant_name || 'Yummy');
+      }
+    }).catch(() => {});
+  }, []);
 
   return (
     <motion.aside
@@ -108,21 +120,21 @@ export function DashboardSidebar({ collapsed, onToggle }: DashboardSidebarProps)
 
       {/* Footer */}
       <div className="border-t border-[rgb(var(--color-border-default))] p-3">
-        <div className={`flex items-center gap-3 rounded-lg px-3 py-2 ${collapsed ? 'justify-center' : ''}`}>
+        <Link href="/dashboard/profile" className={`flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-[rgb(var(--color-surface-secondary))] transition-colors ${collapsed ? 'justify-center' : ''}`}>
           <div className="h-8 w-8 rounded-full bg-[rgb(var(--color-brand-500))] flex items-center justify-center text-white text-sm font-medium shrink-0">
-            Y
+            {userName ? userName.charAt(0).toUpperCase() : 'U'}
           </div>
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-[rgb(var(--color-text-primary))]">
-                Yummy Cafe
+                {userName || 'User'}
               </p>
               <p className="truncate text-xs text-[rgb(var(--color-text-tertiary))]">
-                Growth Plan
+                {tenantName || 'Restaurant'}
               </p>
             </div>
           )}
-        </div>
+        </Link>
       </div>
     </motion.aside>
   );
