@@ -44,13 +44,10 @@ export async function POST(req: NextRequest) {
   db.prepare(`
     INSERT INTO users (id, email, password_hash, name, role, tenant_id)
     VALUES (?, ?, ?, ?, 'restaurant_owner', ?)
-  `).run(ownerId, body.owner_email, passwordHash, body.owner_name || body.name, ownerId);
+  `).run(ownerId, body.owner_email, passwordHash, body.owner_name || body.name, tenantId);
 
   // Update tenant with owner
   db.prepare('UPDATE tenants SET owner_id = ? WHERE id = ?').run(ownerId, tenantId);
-
-  // Fix: link user to tenant
-  db.prepare('UPDATE users SET tenant_id = ? WHERE id = ?').run(tenantId, ownerId);
 
   const tenant = db.prepare('SELECT * FROM tenants WHERE id = ?').get(tenantId);
   return NextResponse.json(tenant, { status: 201 });

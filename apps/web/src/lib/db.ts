@@ -288,8 +288,83 @@ function initAuth() {
     const hash = bcrypt.hashSync('admin', 10);
     db.prepare(`INSERT INTO users (id, email, password_hash, name, role, tenant_id) VALUES (?, ?, ?, ?, 'super_admin', NULL)`).run(adminId, 'admin@admin.com', hash, 'Super Admin');
   } else {
-    // Ensure admin credentials are correct
     const hash = bcrypt.hashSync('admin', 10);
     db.prepare("UPDATE users SET email = ?, password_hash = ? WHERE role = 'super_admin'").run('admin@admin.com', hash);
+  }
+
+  // Create test restaurant 1: user1@email.com / 1111
+  const user1Exists = db.prepare("SELECT id FROM users WHERE email = 'user1@email.com'").get();
+  if (!user1Exists) {
+    const tenant1Id = 'tenant-001';
+    const user1Id = 'user-001';
+    const hash1 = bcrypt.hashSync('1111', 10);
+
+    try { db.prepare(`INSERT INTO tenants (id, name, slug, owner_id, plan, email, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(tenant1Id, 'Warung Makan Ali', 'warung-makan-ali', user1Id, 'growth', 'user1@email.com', '+60 12-111 1111', '123 Jalan Ampang, KL'); } catch {}
+    try { db.prepare(`INSERT INTO users (id, email, password_hash, name, role, tenant_id) VALUES (?, ?, ?, ?, 'restaurant_owner', ?)`).run(user1Id, 'user1@email.com', hash1, 'Ali Ahmad', tenant1Id); } catch {}
+
+    // Sample menu for tenant 1
+    const cats1 = [
+      ['t1-cat-1', 'Nasi', '🍚', 1, tenant1Id],
+      ['t1-cat-2', 'Mee', '🍜', 2, tenant1Id],
+      ['t1-cat-3', 'Minuman', '🥤', 3, tenant1Id],
+    ];
+    const items1 = [
+      ['t1-item-1', 't1-cat-1', 'Nasi Lemak Ayam', 'Coconut rice with fried chicken', 1200, '🍛', tenant1Id],
+      ['t1-item-2', 't1-cat-1', 'Nasi Goreng Special', 'Fried rice with egg and prawns', 1000, '🍚', tenant1Id],
+      ['t1-item-3', 't1-cat-2', 'Mee Goreng', 'Fried noodles with vegetables', 900, '🍝', tenant1Id],
+      ['t1-item-4', 't1-cat-2', 'Laksa Utara', 'Northern style spicy noodle soup', 1100, '🍲', tenant1Id],
+      ['t1-item-5', 't1-cat-3', 'Teh Tarik', 'Pulled milk tea', 350, '🍵', tenant1Id],
+      ['t1-item-6', 't1-cat-3', 'Air Sirap', 'Rose syrup drink', 300, '🥤', tenant1Id],
+    ];
+    const tables1 = [
+      ['t1-tbl-1', 'A-01', 2, 'Indoor', 'available', tenant1Id],
+      ['t1-tbl-2', 'A-02', 4, 'Indoor', 'available', tenant1Id],
+      ['t1-tbl-3', 'A-03', 4, 'Indoor', 'available', tenant1Id],
+      ['t1-tbl-4', 'A-04', 6, 'Outdoor', 'available', tenant1Id],
+      ['t1-tbl-5', 'A-05', 2, 'Outdoor', 'available', tenant1Id],
+    ];
+
+    for (const c of cats1) db.prepare('INSERT OR IGNORE INTO menu_categories (id, name, emoji, sort_order, tenant_id) VALUES (?,?,?,?,?)').run(...c);
+    for (const i of items1) db.prepare('INSERT OR IGNORE INTO menu_items (id, category_id, name, description, price, image, tenant_id) VALUES (?,?,?,?,?,?,?)').run(...i);
+    for (const t of tables1) db.prepare('INSERT OR IGNORE INTO tables (id, table_number, capacity, zone, status, tenant_id) VALUES (?,?,?,?,?,?)').run(...t);
+  }
+
+  // Create test restaurant 2: user2@email.com / 2222
+  const user2Exists = db.prepare("SELECT id FROM users WHERE email = 'user2@email.com'").get();
+  if (!user2Exists) {
+    const tenant2Id = 'tenant-002';
+    const user2Id = 'user-002';
+    const hash2 = bcrypt.hashSync('2222', 10);
+
+    try { db.prepare(`INSERT INTO tenants (id, name, slug, owner_id, plan, email, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(tenant2Id, 'Restoran Seri Melaka', 'restoran-seri-melaka', user2Id, 'enterprise', 'user2@email.com', '+60 13-222 2222', '456 Jalan Melaka, Melaka'); } catch {}
+    try { db.prepare(`INSERT INTO users (id, email, password_hash, name, role, tenant_id) VALUES (?, ?, ?, ?, 'restaurant_owner', ?)`).run(user2Id, 'user2@email.com', hash2, 'Siti Nurhaliza', tenant2Id); } catch {}
+
+    // Sample menu for tenant 2
+    const cats2 = [
+      ['t2-cat-1', 'Main Course', '🍽️', 1, tenant2Id],
+      ['t2-cat-2', 'Appetizers', '🍢', 2, tenant2Id],
+      ['t2-cat-3', 'Beverages', '☕', 3, tenant2Id],
+    ];
+    const items2 = [
+      ['t2-item-1', 't2-cat-1', 'Ayam Penyet', 'Smashed fried chicken with sambal', 1500, '🍗', tenant2Id],
+      ['t2-item-2', 't2-cat-1', 'Rendang Tok', 'Traditional dry rendang', 1800, '🥘', tenant2Id],
+      ['t2-item-3', 't2-cat-1', 'Ikan Bakar', 'Grilled fish with special sauce', 2000, '🐟', tenant2Id],
+      ['t2-item-4', 't2-cat-2', 'Satay Celup', 'Dip-your-own satay', 1600, '🍢', tenant2Id],
+      ['t2-item-5', 't2-cat-2', 'Otak-Otak', 'Grilled fish cake', 500, '🫓', tenant2Id],
+      ['t2-item-6', 't2-cat-3', 'Kopi Melaka', 'Traditional Melaka coffee', 400, '☕', tenant2Id],
+      ['t2-item-7', 't2-cat-3', 'Cendol Gula Melaka', 'Shaved ice with palm sugar', 700, '🍧', tenant2Id],
+    ];
+    const tables2 = [
+      ['t2-tbl-1', 'M-01', 2, 'Ground Floor', 'available', tenant2Id],
+      ['t2-tbl-2', 'M-02', 4, 'Ground Floor', 'available', tenant2Id],
+      ['t2-tbl-3', 'M-03', 6, 'Ground Floor', 'available', tenant2Id],
+      ['t2-tbl-4', 'M-04', 4, 'Upstairs', 'available', tenant2Id],
+      ['t2-tbl-5', 'M-05', 8, 'Upstairs', 'available', tenant2Id],
+      ['t2-tbl-6', 'M-06', 10, 'VIP Room', 'available', tenant2Id],
+    ];
+
+    for (const c of cats2) db.prepare('INSERT OR IGNORE INTO menu_categories (id, name, emoji, sort_order, tenant_id) VALUES (?,?,?,?,?)').run(...c);
+    for (const i of items2) db.prepare('INSERT OR IGNORE INTO menu_items (id, category_id, name, description, price, image, tenant_id) VALUES (?,?,?,?,?,?,?)').run(...i);
+    for (const t of tables2) db.prepare('INSERT OR IGNORE INTO tables (id, table_number, capacity, zone, status, tenant_id) VALUES (?,?,?,?,?,?)').run(...t);
   }
 }
