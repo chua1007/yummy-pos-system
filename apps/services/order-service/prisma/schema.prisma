@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id              String      @id @default(uuid()) @db.Uuid
+  tenantId        String      @map("tenant_id") @db.Uuid
+  branchId        String      @map("branch_id") @db.Uuid
+  orderNumber     String      @map("order_number")
+  type            String      // dine_in, takeaway, delivery
+  status          String      @default("pending")
+  tableId         String?     @map("table_id") @db.Uuid
+  customerId      String?     @map("customer_id") @db.Uuid
+  subtotal        Int         @default(0) // Stored in cents
+  taxAmount       Int         @default(0) @map("tax_amount")
+  discountAmount  Int         @default(0) @map("discount_amount")
+  total           Int         @default(0)
+  currency        String      @default("MYR")
+  notes           String?
+  placedAt        DateTime?   @map("placed_at")
+  completedAt     DateTime?   @map("completed_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  items           OrderItem[]
+
+  @@index([tenantId, branchId, createdAt(sort: Desc)])
+  @@index([tenantId, status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  orderId     String   @map("order_id") @db.Uuid
+  menuItemId  String   @map("menu_item_id") @db.Uuid
+  variantId   String?  @map("variant_id") @db.Uuid
+  quantity    Int
+  unitPrice   Int      @default(0) @map("unit_price")
+  subtotal    Int      @default(0)
+  notes       String?
+  status      String   @default("queued")
+  modifiers   Json     @default("[]")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_items")
+}

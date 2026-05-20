@@ -1,0 +1,44 @@
+# Base Dockerfile for NestJS microservices
+FROM node:20-alpine AS base
+RUN apk add --no-cache libc6-compat
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+WORKDIR /app
+
+# Install dependencies
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/shared-types/package.json ./packages/shared-types/
+ARG SERVICE_NAME
+COPY apps/services/${SERVICE_NAME}/package.json ./apps/services/${SERVICE_NAME}/
+RUN pnpm install --frozen-lockfile
+
+# Build
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/shared-types/node_modules ./packages/shared-types/node_modules
+ARG SERVICE_NAME
+COPY packages/shared-types ./packages/shared-types
+COPY apps/services/${SERVICE_NAME} ./apps/services/${SERVICE_NAME}
+WORKDIR /app/apps/services/${SERVICE_NAME}
+RUN pnpm build
+
+# Production
+FROM node:20-alpine AS runner
+RUN apk add --no-cache libc6-compat dumb-init
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+
+ARG SERVICE_NAME
+COPY --from=builder --chown=nestjs:nodejs /app/apps/services/${SERVICE_NAME}/dist ./dist
+COPY --from=builder --chown=nestjs:nodejs /app/apps/services/${SERVICE_NAME}/node_modules ./node_modules
+
+USER nestjs
+
+EXPOSE 3000
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "dist/main.js"]

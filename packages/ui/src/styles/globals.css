@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  [data-theme='light'] {
+    /* Surface */
+    --color-surface-primary: 255 255 255;
+    --color-surface-secondary: 248 250 252;
+    --color-surface-tertiary: 241 245 249;
+    --color-surface-elevated: 255 255 255;
+    --color-surface-overlay: 0 0 0 / 0.5;
+
+    /* Text */
+    --color-text-primary: 15 23 42;
+    --color-text-secondary: 71 85 105;
+    --color-text-tertiary: 148 163 184;
+    --color-text-inverse: 255 255 255;
+
+    /* Border */
+    --color-border-default: 226 232 240;
+    --color-border-subtle: 241 245 249;
+    --color-border-strong: 203 213 225;
+
+    /* Brand */
+    --color-brand-50: 255 247 237;
+    --color-brand-100: 255 237 213;
+    --color-brand-200: 254 215 170;
+    --color-brand-300: 253 186 116;
+    --color-brand-400: 251 146 60;
+    --color-brand-500: 249 115 22;
+    --color-brand-600: 234 88 12;
+    --color-brand-700: 194 65 12;
+    --color-brand-800: 154 52 18;
+    --color-brand-900: 124 45 18;
+
+    /* Status */
+    --color-status-success: 34 197 94;
+    --color-status-warning: 234 179 8;
+    --color-status-error: 239 68 68;
+    --color-status-info: 59 130 246;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+  }
+
+  [data-theme='dark'] {
+    /* Surface */
+    --color-surface-primary: 15 23 42;
+    --color-surface-secondary: 30 41 59;
+    --color-surface-tertiary: 51 65 85;
+    --color-surface-elevated: 30 41 59;
+    --color-surface-overlay: 0 0 0 / 0.7;
+
+    /* Text */
+    --color-text-primary: 248 250 252;
+    --color-text-secondary: 203 213 225;
+    --color-text-tertiary: 100 116 139;
+    --color-text-inverse: 15 23 42;
+
+    /* Border */
+    --color-border-default: 51 65 85;
+    --color-border-subtle: 30 41 59;
+    --color-border-strong: 71 85 105;
+
+    /* Shadows (darker in dark mode) */
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5);
+  }
+
+  * {
+    border-color: rgb(var(--color-border-default));
+  }
+
+  body {
+    background-color: rgb(var(--color-surface-primary));
+    color: rgb(var(--color-text-primary));
+  }
+}
+
+/* Smooth theme transition */
+html {
+  transition: background-color 0.3s ease, color 0.2s ease;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Shimmer animation for skeletons */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}

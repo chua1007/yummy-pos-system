@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL ─────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: yummy-postgres
+    environment:
+      POSTGRES_USER: yummy
+      POSTGRES_PASSWORD: yummy_dev
+      POSTGRES_DB: yummy_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U yummy']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ─────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: yummy-redis
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Kafka (via Redpanda for lightweight dev) ──────────────
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.1
+    container_name: yummy-kafka
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --smp 1
+      - --memory 512M
+      - --overprovisioned
+    ports:
+      - '19092:19092'
+      - '9644:9644'
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ['CMD', 'rpk', 'cluster', 'health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redpanda Console (Kafka UI) ──────────────────────────
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.6.0
+    container_name: yummy-kafka-ui
+    ports:
+      - '8080:8080'
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+    depends_on:
+      redpanda:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  redpanda_data:
