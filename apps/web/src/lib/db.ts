@@ -271,6 +271,6 @@ function initAuth() {
   if (!adminExists) {
     const adminId = uuid();
     const hash = bcrypt.hashSync('admin', 10);
-    db.prepare(`INSERT INTO users (id, email, password_hash, name, role, tenant_id) VALUES (?, ?, ?, ?, 'super_admin', NULL)`).run(adminId, 'admin', hash, 'Super Admin');
+    db.prepare(`INSERT INTO users (id, email, password_hash, name, role, tenant_id) VALUES (?, ?, ?, ?, 'super_admin', NULL)`).run(adminId, 'admin@admin.com', hash, 'Super Admin');
   }
 }
