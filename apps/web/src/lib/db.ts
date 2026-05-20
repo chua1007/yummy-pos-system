@@ -11,6 +11,7 @@ function getDb(): Database.Database {
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     initializeDatabase();
+    initAuth();
   }
   return db;
 }
@@ -229,3 +230,47 @@ function seedData() {
 }
 
 export default getDb;
+
+function initAuth() {
+  const bcrypt = require('bcryptjs');
+  const { v4: uuid } = require('uuid');
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS tenants (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      owner_id TEXT,
+      plan TEXT DEFAULT 'starter',
+      status TEXT DEFAULT 'active',
+      logo_url TEXT,
+      address TEXT,
+      phone TEXT,
+      email TEXT,
+      currency TEXT DEFAULT 'MYR',
+      tax_rate REAL DEFAULT 6.0,
+      timezone TEXT DEFAULT 'Asia/Kuala_Lumpur',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'staff',
+      tenant_id TEXT,
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now')),
+      last_login_at TEXT
+    );
+  `);
+
+  // Create default super admin if not exists
+  const adminExists = db.prepare("SELECT id FROM users WHERE role = 'super_admin'").get();
+  if (!adminExists) {
+    const adminId = uuid();
+    const hash = bcrypt.hashSync('admin', 10);
+    db.prepare(`INSERT INTO users (id, email, password_hash, name, role, tenant_id) VALUES (?, ?, ?, ?, 'super_admin', NULL)`).run(adminId, 'admin', hash, 'Super Admin');
+  }
+}
