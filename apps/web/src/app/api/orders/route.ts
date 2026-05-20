@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const params: any[] = [];
 
   if (effectiveTenant) {
-    query += ' AND (tenant_id = ? OR tenant_id IS NULL)';
+    query += ' AND tenant_id = ?';
     params.push(effectiveTenant);
   }
 

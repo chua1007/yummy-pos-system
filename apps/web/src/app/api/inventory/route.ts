@@ -9,7 +9,7 @@ export async function GET() {
 
   let items;
   if (tenantId) {
-    items = db.prepare('SELECT * FROM inventory WHERE tenant_id = ? OR tenant_id IS NULL ORDER BY name').all(tenantId);
+    items = db.prepare('SELECT * FROM inventory WHERE tenant_id = ? ORDER BY name').all(tenantId);
   } else {
     items = db.prepare('SELECT * FROM inventory ORDER BY name').all();
   }

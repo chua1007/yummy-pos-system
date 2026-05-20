@@ -1,27 +1,29 @@
 import { NextResponse } from 'next/server';
 import getDb from '@/lib/db';
+import { getTenantId } from '@/lib/tenant';
 
 export async function GET() {
   const db = getDb();
+  const tenantId = getTenantId();
 
-  // Revenue & order stats
-  const thisMonth = db.prepare(`
-    SELECT COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue
-    FROM orders WHERE created_at >= date('now', 'start of month')
-  `).get() as any;
+  const tf = tenantId ? 'AND tenant_id = ?' : '';
+  const tp = tenantId ? [tenantId] : [];
 
-  const lastMonth = db.prepare(`
-    SELECT COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue
-    FROM orders WHERE created_at >= date('now', 'start of month', '-1 month') AND created_at < date('now', 'start of month')
-  `).get() as any;
+  // Revenue & order stats this month
+  const thisMonth = db.prepare(
+    `SELECT COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue FROM orders WHERE created_at >= date('now', 'start of month') ${tf}`
+  ).get(...tp) as any;
+
+  const lastMonth = db.prepare(
+    `SELECT COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue FROM orders WHERE created_at >= date('now', 'start of month', '-1 month') AND created_at < date('now', 'start of month') ${tf}`
+  ).get(...tp) as any;
 
   // Customer count
-  const customerCount = (db.prepare('SELECT COUNT(*) as count FROM customers').get() as any).count;
+  const cfilt = tenantId ? 'WHERE tenant_id = ?' : '';
+  const customerCount = (db.prepare(`SELECT COUNT(*) as count FROM customers ${cfilt}`).get(...(tenantId ? [tenantId] : [])) as any).count;
 
-  // Avg prep time (mock for now since we don't track actual prep)
   const avgOrderValue = thisMonth.total_orders > 0 ? Math.round(thisMonth.total_revenue / thisMonth.total_orders) : 0;
 
-  // Revenue change
   const revenueChange = lastMonth.total_revenue > 0
     ? ((thisMonth.total_revenue - lastMonth.total_revenue) / lastMonth.total_revenue * 100).toFixed(1)
     : thisMonth.total_revenue > 0 ? '100' : '0';
@@ -31,11 +33,9 @@ export async function GET() {
     : thisMonth.total_orders > 0 ? '100' : '0';
 
   // Orders by hour (today)
-  const hourlyOrders = db.prepare(`
-    SELECT strftime('%H', created_at) as hour, COUNT(*) as count
-    FROM orders WHERE date(created_at) = date('now')
-    GROUP BY hour ORDER BY hour
-  `).all() as any[];
+  const hourlyOrders = db.prepare(
+    `SELECT strftime('%H', created_at) as hour, COUNT(*) as count FROM orders WHERE date(created_at) = date('now') ${tf} GROUP BY hour ORDER BY hour`
+  ).all(...tp) as any[];
 
   const hourlyData = [];
   for (let h = 8; h <= 22; h++) {
@@ -45,22 +45,9 @@ export async function GET() {
   }
 
   // Top selling items (this month)
-  const topItems = db.prepare(`
-    SELECT oi.name, SUM(oi.quantity) as total_qty, SUM(oi.subtotal) as total_revenue
-    FROM order_items oi
-    JOIN orders o ON oi.order_id = o.id
-    WHERE o.created_at >= date('now', 'start of month')
-    GROUP BY oi.name
-    ORDER BY total_qty DESC
-    LIMIT 5
-  `).all() as any[];
-
-  // Orders by day (last 7 days)
-  const dailyOrders = db.prepare(`
-    SELECT date(created_at) as day, COUNT(*) as count, SUM(total) as revenue
-    FROM orders WHERE created_at >= date('now', '-7 days')
-    GROUP BY day ORDER BY day
-  `).all();
+  const topItems = db.prepare(
+    `SELECT oi.name, SUM(oi.quantity) as total_qty, SUM(oi.subtotal) as total_revenue FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE o.created_at >= date('now', 'start of month') ${tf.replace('tenant_id', 'o.tenant_id')} GROUP BY oi.name ORDER BY total_qty DESC LIMIT 5`
+  ).all(...tp) as any[];
 
   return NextResponse.json({
     stats: {
@@ -77,6 +64,5 @@ export async function GET() {
       orders: item.total_qty,
       revenue: item.total_revenue,
     })),
-    dailyOrders,
   });
 }

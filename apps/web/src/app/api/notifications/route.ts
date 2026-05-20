@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
+import { getTenantId } from '@/lib/tenant';
 import { v4 as uuid } from 'uuid';
 
 export async function GET() {
   const db = getDb();
-  const notifications = db.prepare('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50').all();
-  const unreadCount = (db.prepare('SELECT COUNT(*) as count FROM notifications WHERE is_read = 0').get() as any).count;
+  const tenantId = getTenantId();
+
+  let notifications, unreadCount;
+  if (tenantId) {
+    notifications = db.prepare('SELECT * FROM notifications WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50').all(tenantId);
+    unreadCount = (db.prepare('SELECT COUNT(*) as count FROM notifications WHERE is_read = 0 AND tenant_id = ?').get(tenantId) as any).count;
+  } else {
+    notifications = db.prepare('SELECT * FROM notifications ORDER BY created_at DESC LIMIT 50').all();
+    unreadCount = (db.prepare('SELECT COUNT(*) as count FROM notifications WHERE is_read = 0').get() as any).count;
+  }
   return NextResponse.json({ notifications, unreadCount });
 }
 

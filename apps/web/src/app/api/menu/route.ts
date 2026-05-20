@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
 
   let categories, items;
   if (effectiveTenant) {
-    categories = db.prepare('SELECT * FROM menu_categories WHERE tenant_id = ? OR tenant_id IS NULL ORDER BY sort_order').all(effectiveTenant);
-    items = db.prepare('SELECT * FROM menu_items WHERE tenant_id = ? OR tenant_id IS NULL ORDER BY created_at DESC').all(effectiveTenant);
+    categories = db.prepare('SELECT * FROM menu_categories WHERE tenant_id = ? ORDER BY sort_order').all(effectiveTenant);
+    items = db.prepare('SELECT * FROM menu_items WHERE tenant_id = ? ORDER BY created_at DESC').all(effectiveTenant);
   } else {
     categories = db.prepare('SELECT * FROM menu_categories ORDER BY sort_order').all();
     items = db.prepare('SELECT * FROM menu_items ORDER BY created_at DESC').all();

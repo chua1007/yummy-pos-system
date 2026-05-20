@@ -10,7 +10,7 @@ export async function GET() {
 
   let tables;
   if (tenantId) {
-    tables = db.prepare('SELECT * FROM tables WHERE tenant_id = ? OR tenant_id IS NULL ORDER BY table_number').all(tenantId);
+    tables = db.prepare('SELECT * FROM tables WHERE tenant_id = ? ORDER BY table_number').all(tenantId);
   } else {
     tables = db.prepare('SELECT * FROM tables ORDER BY table_number').all();
   }

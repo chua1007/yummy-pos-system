@@ -9,7 +9,7 @@ export async function GET() {
 
   let customers;
   if (tenantId) {
-    customers = db.prepare('SELECT * FROM customers WHERE tenant_id = ? OR tenant_id IS NULL ORDER BY created_at DESC').all(tenantId);
+    customers = db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY created_at DESC').all(tenantId);
   } else {
     customers = db.prepare('SELECT * FROM customers ORDER BY created_at DESC').all();
   }

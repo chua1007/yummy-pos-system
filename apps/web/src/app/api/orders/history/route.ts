@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
+import { getTenantId } from '@/lib/tenant';
 
 export async function GET(req: NextRequest) {
   const db = getDb();
+  const tenantId = getTenantId();
   const searchParams = req.nextUrl.searchParams;
   const dateFrom = searchParams.get('from');
   const dateTo = searchParams.get('to');
@@ -14,6 +16,11 @@ export async function GET(req: NextRequest) {
 
   let whereClause = '1=1';
   const params: any[] = [];
+
+  if (tenantId) {
+    whereClause += ' AND tenant_id = ?';
+    params.push(tenantId);
+  }
 
   if (dateFrom) {
     whereClause += ' AND date(created_at) >= date(?)';
