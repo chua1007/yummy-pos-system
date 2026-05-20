@@ -54,10 +54,8 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="mx-auto mb-3 overflow-hidden" style={{ width: '280px', height: '120px' }}>
-            <img src="/yummy_dark_mode.png" alt="Yummy" style={{ width: '500px', height: 'auto', marginLeft: '-110px', marginTop: '-60px' }} />
-          </div>
+        <div className="text-center mb-8">
+          <img src="/yummy_dark_mode.png" alt="Yummy" className="h-20 mx-auto mb-4 object-contain" />
           <p className="text-slate-400 text-sm">Restaurant Management System</p>
         </div>
 

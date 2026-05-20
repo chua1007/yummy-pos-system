@@ -266,11 +266,15 @@ function initAuth() {
     );
   `);
 
-  // Create default super admin if not exists
-  const adminExists = db.prepare("SELECT id FROM users WHERE role = 'super_admin'").get();
+  // Create or update super admin
+  const adminExists = db.prepare("SELECT id FROM users WHERE role = 'super_admin'").get() as any;
   if (!adminExists) {
     const adminId = uuid();
     const hash = bcrypt.hashSync('admin', 10);
     db.prepare(`INSERT INTO users (id, email, password_hash, name, role, tenant_id) VALUES (?, ?, ?, ?, 'super_admin', NULL)`).run(adminId, 'admin@admin.com', hash, 'Super Admin');
+  } else {
+    // Ensure admin credentials are correct
+    const hash = bcrypt.hashSync('admin', 10);
+    db.prepare("UPDATE users SET email = ?, password_hash = ? WHERE role = 'super_admin'").run('admin@admin.com', hash);
   }
 }
