@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const response = NextResponse.json({ user: authUser });
   response.cookies.set('yummy_token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60, // 7 days
     path: '/',
