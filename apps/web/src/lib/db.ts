@@ -5,7 +5,7 @@ const DB_PATH = path.join(process.cwd(), 'yummy.db');
 
 let db: Database.Database;
 
-function getDb() {
+function getDb(): Database.Database {
   if (!db) {
     db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');
