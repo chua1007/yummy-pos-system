@@ -12,6 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Grid3X3,
+  History,
+  Heart,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { usePathname } from 'next/navigation';
@@ -26,10 +28,12 @@ interface DashboardSidebarProps {
 const navItems = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
   { href: '/dashboard/orders', labelKey: 'nav.orders', icon: ShoppingBag },
+  { href: '/dashboard/order-history', labelKey: 'nav.order_history', icon: History },
   { href: '/dashboard/menu', labelKey: 'nav.menu', icon: UtensilsCrossed },
   { href: '/dashboard/tables', labelKey: 'nav.tables', icon: Grid3X3 },
   { href: '/dashboard/inventory', labelKey: 'nav.inventory', icon: Package },
   { href: '/dashboard/customers', labelKey: 'nav.customers', icon: Users },
+  { href: '/dashboard/crm', labelKey: 'nav.crm', icon: Heart },
   { href: '/dashboard/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
   { href: '/dashboard/settings', labelKey: 'nav.settings', icon: Settings },
 ];

@@ -2,7 +2,9 @@ const translations: Record<string, Record<string, string>> = {
   en: {
     'nav.dashboard': 'Dashboard',
     'nav.orders': 'Orders',
+    'nav.order_history': 'Order History',
     'nav.menu': 'Menu',
+    'nav.crm': 'CRM & Loyalty',
     'nav.tables': 'Tables & QR',
     'nav.inventory': 'Inventory',
     'nav.customers': 'Customers',
