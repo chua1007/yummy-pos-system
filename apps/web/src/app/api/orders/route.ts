@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
   createOrder();
 
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id) as Record<string, unknown>;
   const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(id);
 
   return NextResponse.json({ ...order, items }, { status: 201 });
