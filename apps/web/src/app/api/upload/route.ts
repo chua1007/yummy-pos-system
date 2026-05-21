@@ -3,6 +3,9 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 
+// Store uploads outside of public/ since Next.js production doesn't serve dynamic files from public/
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get('file') as File;
@@ -25,11 +28,11 @@ export async function POST(req: NextRequest) {
 
   const ext = file.name.split('.').pop() || 'jpg';
   const filename = `${uuid()}.${ext}`;
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
 
-  await mkdir(uploadDir, { recursive: true });
-  await writeFile(path.join(uploadDir, filename), buffer);
+  await mkdir(UPLOAD_DIR, { recursive: true });
+  await writeFile(path.join(UPLOAD_DIR, filename), buffer);
 
-  const url = `/uploads/${filename}`;
+  // Serve via API route instead of static file
+  const url = `/api/upload/${filename}`;
   return NextResponse.json({ url, filename }, { status: 201 });
 }
