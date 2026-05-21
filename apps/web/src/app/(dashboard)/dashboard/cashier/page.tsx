@@ -278,7 +278,10 @@ export default function CashierPage() {
               {/* Totals */}
               <div className="border-t border-[rgb(var(--color-border-default))] pt-3 space-y-1">
                 <div className="flex justify-between text-sm"><span className="text-[rgb(var(--color-text-secondary))]">Subtotal</span><span>RM {(selectedOrder.subtotal / 100).toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-[rgb(var(--color-text-secondary))]">Tax (SST + Service)</span><span>RM {(selectedOrder.tax_amount / 100).toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-[rgb(var(--color-text-secondary))]">SST</span><span>RM {(selectedOrder.subtotal * 0.06 / 100).toFixed(2)}</span></div>
+                {selectedOrder.tax_amount > selectedOrder.subtotal * 0.06 / 100 && (
+                  <div className="flex justify-between text-sm"><span className="text-[rgb(var(--color-text-secondary))]">Service Tax</span><span>RM {((selectedOrder.tax_amount - Math.round(selectedOrder.subtotal * 0.06)) / 100).toFixed(2)}</span></div>
+                )}
                 <div className="flex justify-between text-base font-bold pt-1"><span>Total</span><span className="text-[rgb(var(--color-brand-500))]">RM {(selectedOrder.total / 100).toFixed(2)}</span></div>
               </div>
 

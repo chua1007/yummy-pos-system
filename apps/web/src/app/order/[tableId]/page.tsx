@@ -29,6 +29,8 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const [taxRate, setTaxRate] = useState(6);
+  const [sstRate, setSstRate] = useState(6);
+  const [serviceRate, setServiceRate] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [tableName, setTableName] = useState('');
   const [tableTenantId, setTableTenantId] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
 
   useEffect(() => {
     // Fetch tax rates
-    fetch('/api/tax-rates').then((r) => r.json()).then((d) => { setTaxRate(d.total_tax_rate); }).catch(() => {});
+    fetch('/api/tax-rates').then((r) => r.json()).then((d) => { setTaxRate(d.total_tax_rate); setSstRate(d.sst_rate); setServiceRate(d.service_tax_rate); }).catch(() => {});
     // Fetch table info + restaurant details
     fetch(`/api/tables/${params.tableId}/info`).then((r) => r.json()).then((data) => {
       if (data.table_number) setTableName(data.table_number);
@@ -286,10 +288,16 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
                     <span className="text-sm text-gray-500">Subtotal</span>
                     <span className="text-sm text-gray-700">RM {(cartTotal / 100).toFixed(2)}</span>
                   </div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm text-gray-500">Tax ({taxRate}%)</span>
-                    <span className="text-sm text-gray-700">RM {(cartTotal * taxRate / 100 / 100).toFixed(2)}</span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-500">SST ({sstRate}%)</span>
+                    <span className="text-sm text-gray-700">RM {(cartTotal * sstRate / 100 / 100).toFixed(2)}</span>
                   </div>
+                  {serviceRate > 0 && (
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-gray-500">Service Tax ({serviceRate}%)</span>
+                      <span className="text-sm text-gray-700">RM {(cartTotal * serviceRate / 100 / 100).toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-base font-bold text-gray-900">Total</span>
                     <span className="text-lg font-bold text-orange-600">RM {((cartTotal * (1 + taxRate / 100)) / 100).toFixed(2)}</span>
