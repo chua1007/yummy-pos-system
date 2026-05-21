@@ -28,11 +28,14 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
   const [customerName, setCustomerName] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [taxRate, setTaxRate] = useState(6);
   const [submitting, setSubmitting] = useState(false);
   const [tableName, setTableName] = useState('');
   const [tableTenantId, setTableTenantId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Fetch tax rates
+    fetch('/api/tax-rates').then((r) => r.json()).then((d) => { setTaxRate(d.total_tax_rate); }).catch(() => {});
     // Fetch menu (with tenant filter from table)
     fetch(`/api/tables/${params.tableId}`).then((r) => r.json()).then((data) => {
       if (data.table_number) setTableName(data.table_number);
@@ -276,12 +279,12 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
                     <span className="text-sm text-gray-700">RM {(cartTotal / 100).toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm text-gray-500">Tax (6%)</span>
-                    <span className="text-sm text-gray-700">RM {(cartTotal * 0.06 / 100).toFixed(2)}</span>
+                    <span className="text-sm text-gray-500">Tax ({taxRate}%)</span>
+                    <span className="text-sm text-gray-700">RM {(cartTotal * taxRate / 100 / 100).toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-base font-bold text-gray-900">Total</span>
-                    <span className="text-lg font-bold text-orange-600">RM {((cartTotal * 1.06) / 100).toFixed(2)}</span>
+                    <span className="text-lg font-bold text-orange-600">RM {((cartTotal * (1 + taxRate / 100)) / 100).toFixed(2)}</span>
                   </div>
                   <button
                     onClick={placeOrder}
