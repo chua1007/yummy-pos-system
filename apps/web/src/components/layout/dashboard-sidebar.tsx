@@ -16,6 +16,7 @@ import {
   Heart,
   CreditCard,
   Receipt,
+  UserCog,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { usePathname } from 'next/navigation';
@@ -39,6 +40,7 @@ const navItems = [
   { href: '/dashboard/inventory', labelKey: 'nav.inventory', icon: Package },
   { href: '/dashboard/customers', labelKey: 'nav.customers', icon: Users },
   { href: '/dashboard/crm', labelKey: 'nav.crm', icon: Heart },
+  { href: '/dashboard/staff', labelKey: 'nav.staff', icon: UserCog },
   { href: '/dashboard/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
   { href: '/dashboard/settings', labelKey: 'nav.settings', icon: Settings },
 ];

@@ -68,7 +68,17 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const taxAmount = Math.round(subtotal * 0.06);
+  // Get tax rates from settings
+  let sstRate = 6;
+  let serviceRate = 0;
+  try {
+    const sstSetting = db.prepare("SELECT value FROM settings WHERE key = 'tax_rate'").get() as any;
+    const serviceSetting = db.prepare("SELECT value FROM settings WHERE key = 'service_tax'").get() as any;
+    if (sstSetting) sstRate = parseFloat(sstSetting.value);
+    if (serviceSetting) serviceRate = parseFloat(serviceSetting.value);
+  } catch {}
+
+  const taxAmount = Math.round(subtotal * ((sstRate + serviceRate) / 100));
   const total = subtotal + taxAmount;
 
   const insertOrder = db.prepare(`

@@ -7,6 +7,7 @@ const translations: Record<string, Record<string, string>> = {
     'nav.crm': 'CRM & Loyalty',
     'nav.cashier': 'Cashier',
     'nav.invoices': 'Invoices',
+    'nav.staff': 'Staff',
     'nav.tables': 'Tables & QR',
     'nav.inventory': 'Inventory',
     'nav.customers': 'Customers',

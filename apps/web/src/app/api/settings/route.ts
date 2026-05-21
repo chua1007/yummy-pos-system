@@ -29,6 +29,7 @@ export async function GET() {
     closing_time: settings.closing_time || '22:00',
     currency: settings.currency || 'MYR',
     tax_rate: settings.tax_rate || '6',
+    service_tax: settings.service_tax || '0',
     timezone: settings.timezone || 'Asia/Kuala_Lumpur',
     language: settings.language || 'en',
     logo_url: settings.logo_url || '',

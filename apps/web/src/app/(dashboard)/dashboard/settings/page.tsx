@@ -15,6 +15,7 @@ interface Settings {
   closing_time: string;
   currency: string;
   tax_rate: string;
+  service_tax: string;
   timezone: string;
   language: string;
   logo_url: string;
@@ -160,10 +161,18 @@ export default function SettingsPage() {
 
             <div className="border-t border-[rgb(var(--color-border-default))] pt-6">
               <h3 className="text-base font-semibold text-[rgb(var(--color-text-primary))] mb-4">Tax Configuration</h3>
-              <div className="max-w-xs">
-                <label className="block text-sm font-medium text-[rgb(var(--color-text-secondary))] mb-1">Tax Rate (%)</label>
-                <input type="number" min="0" max="100" step="0.5" value={settings.tax_rate} onChange={(e) => updateField('tax_rate', e.target.value)} className="w-full rounded-lg border border-[rgb(var(--color-border-default))] px-3 py-2.5 text-sm text-[rgb(var(--color-input-text))] bg-[rgb(var(--color-input-bg))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-brand-500))]" />
-                <p className="mt-1 text-xs text-[rgb(var(--color-text-tertiary))]">SST/GST applied to all orders</p>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 max-w-lg">
+                <div>
+                  <label className="block text-sm font-medium text-[rgb(var(--color-text-secondary))] mb-1">SST Rate (%)</label>
+                  <input type="number" min="0" max="100" step="0.5" value={settings.tax_rate} onChange={(e) => updateField('tax_rate', e.target.value)} className="w-full rounded-lg border border-[rgb(var(--color-border-default))] px-3 py-2.5 text-sm text-[rgb(var(--color-input-text))] bg-[rgb(var(--color-input-bg))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-brand-500))]" />
+                  <p className="mt-1 text-xs text-[rgb(var(--color-text-tertiary))]">Sales & Service Tax (SST)</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[rgb(var(--color-text-secondary))] mb-1">Service Tax (%)</label>
+                  <input type="number" min="0" max="100" step="0.5" value={settings.service_tax} onChange={(e) => updateField('service_tax', e.target.value)} className="w-full rounded-lg border border-[rgb(var(--color-border-default))] px-3 py-2.5 text-sm text-[rgb(var(--color-input-text))] bg-[rgb(var(--color-input-bg))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-brand-500))]" />
+                  <p className="mt-1 text-xs text-[rgb(var(--color-text-tertiary))]">Service charge applied to all orders</p>
+                </div>
+              </div>
               </div>
             </div>
 
