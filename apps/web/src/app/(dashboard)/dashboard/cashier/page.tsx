@@ -6,7 +6,7 @@ import { CreditCard, Banknote, Smartphone, Receipt, Trash2, Printer, Check, X, U
 
 interface OrderItem { id: string; name: string; quantity: number; unit_price: number; subtotal: number; }
 interface Order { id: string; order_number: string; type: string; status: string; table_number: string | null; customer_name: string; subtotal: number; tax_amount: number; total: number; items: OrderItem[]; created_at: string; }
-interface Invoice { id: string; invoice_number: string; customer_name: string; table_number: string; subtotal: number; tax_amount: number; rounding: number; total: number; payment_method: string; cashier_name: string; items: { name: string; quantity: number; unit_price: number; subtotal: number }[]; created_at: string; }
+interface Invoice { id: string; invoice_number: string; customer_name: string; table_number: string; subtotal: number; tax_amount: number; service_tax_amount: number; sst_rate: number; service_tax_rate: number; rounding: number; total: number; payment_method: string; cashier_name: string; items: { name: string; quantity: number; unit_price: number; subtotal: number }[]; created_at: string; }
 interface CashierInfo { id: string; name: string; position: string; }
 
 const paymentMethods = [
@@ -278,7 +278,7 @@ export default function CashierPage() {
               {/* Totals */}
               <div className="border-t border-[rgb(var(--color-border-default))] pt-3 space-y-1">
                 <div className="flex justify-between text-sm"><span className="text-[rgb(var(--color-text-secondary))]">Subtotal</span><span>RM {(selectedOrder.subtotal / 100).toFixed(2)}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-[rgb(var(--color-text-secondary))]">SST (6%)</span><span>RM {(selectedOrder.tax_amount / 100).toFixed(2)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-[rgb(var(--color-text-secondary))]">Tax (SST + Service)</span><span>RM {(selectedOrder.tax_amount / 100).toFixed(2)}</span></div>
                 <div className="flex justify-between text-base font-bold pt-1"><span>Total</span><span className="text-[rgb(var(--color-brand-500))]">RM {(selectedOrder.total / 100).toFixed(2)}</span></div>
               </div>
 
@@ -329,6 +329,10 @@ function generateReceiptHTML(invoice: Invoice): string {
     <tr><td style="text-align:left">${i.quantity}x ${i.name}</td><td style="text-align:right">RM ${(i.subtotal / 100).toFixed(2)}</td></tr>
   `).join('');
 
+  const sstRate = invoice.sst_rate || 6;
+  const serviceRate = invoice.service_tax_rate || 0;
+  const serviceTaxAmount = invoice.service_tax_amount || 0;
+
   return `<!DOCTYPE html><html><head><style>
     body { font-family: 'Courier New', monospace; font-size: 12px; width: 280px; margin: 0 auto; padding: 10px; }
     .center { text-align: center; }
@@ -353,12 +357,13 @@ function generateReceiptHTML(invoice: Invoice): string {
     <div class="line"></div>
     <table>
       <tr><td>Subtotal</td><td class="right">RM ${(invoice.subtotal / 100).toFixed(2)}</td></tr>
-      <tr><td>SST (6%)</td><td class="right">RM ${(invoice.tax_amount / 100).toFixed(2)}</td></tr>
+      <tr><td>SST (${sstRate}%)</td><td class="right">RM ${(invoice.tax_amount / 100).toFixed(2)}</td></tr>
+      ${serviceTaxAmount > 0 ? `<tr><td>Service Tax (${serviceRate}%)</td><td class="right">RM ${(serviceTaxAmount / 100).toFixed(2)}</td></tr>` : ''}
       ${invoice.rounding !== 0 ? `<tr><td>Rounding</td><td class="right">RM ${(invoice.rounding / 100).toFixed(2)}</td></tr>` : ''}
       <tr class="bold"><td class="big">TOTAL</td><td class="right big">RM ${(invoice.total / 100).toFixed(2)}</td></tr>
     </table>
     <div class="line"></div>
-    <div class="center bold">Payment: ${invoice.payment_method.replace('_', ' ').toUpperCase()}</div>
+    <div class="center bold">Payment: ${invoice.payment_method.replace(/_/g, ' ').toUpperCase()}</div>
     <div class="line"></div>
     <div class="center" style="font-size:10px;margin-top:8px">Thank you for dining with us!</div>
     <div class="center" style="font-size:10px">Please come again 🍽️</div>
