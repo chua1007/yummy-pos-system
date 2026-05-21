@@ -157,6 +157,39 @@ function initializeDatabase() {
   try { db.exec('ALTER TABLE notifications ADD COLUMN tenant_id TEXT'); } catch {}
   try { db.exec('ALTER TABLE reservations ADD COLUMN tenant_id TEXT'); } catch {}
 
+  // Invoice & Cashier tables
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS invoices (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT,
+      order_id TEXT NOT NULL,
+      invoice_number TEXT NOT NULL,
+      customer_name TEXT,
+      table_number TEXT,
+      subtotal INTEGER NOT NULL DEFAULT 0,
+      tax_amount INTEGER NOT NULL DEFAULT 0,
+      discount_amount INTEGER DEFAULT 0,
+      rounding INTEGER DEFAULT 0,
+      total INTEGER NOT NULL DEFAULT 0,
+      payment_method TEXT NOT NULL DEFAULT 'cash',
+      cashier_name TEXT,
+      cashier_id TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (order_id) REFERENCES orders(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS invoice_items (
+      id TEXT PRIMARY KEY,
+      invoice_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      unit_price INTEGER NOT NULL,
+      subtotal INTEGER NOT NULL,
+      FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+    );
+  `);
+
   // Remove UNIQUE constraint on table_number (now unique per tenant)
   try { db.exec("CREATE INDEX IF NOT EXISTS idx_tables_tenant ON tables(tenant_id, table_number)"); } catch {}
   try { db.exec("CREATE INDEX IF NOT EXISTS idx_orders_tenant ON orders(tenant_id, created_at)"); } catch {}

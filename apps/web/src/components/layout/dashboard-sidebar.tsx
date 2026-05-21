@@ -14,6 +14,8 @@ import {
   Grid3X3,
   History,
   Heart,
+  CreditCard,
+  Receipt,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { usePathname } from 'next/navigation';
@@ -29,6 +31,8 @@ interface DashboardSidebarProps {
 const navItems = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
   { href: '/dashboard/orders', labelKey: 'nav.orders', icon: ShoppingBag },
+  { href: '/dashboard/cashier', labelKey: 'nav.cashier', icon: CreditCard },
+  { href: '/dashboard/invoices', labelKey: 'nav.invoices', icon: Receipt },
   { href: '/dashboard/order-history', labelKey: 'nav.order_history', icon: History },
   { href: '/dashboard/menu', labelKey: 'nav.menu', icon: UtensilsCrossed },
   { href: '/dashboard/tables', labelKey: 'nav.tables', icon: Grid3X3 },
