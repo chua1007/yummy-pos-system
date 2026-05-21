@@ -77,11 +77,11 @@ export default function SettingsPage() {
 
   if (loading || !settings) return <div className="p-6">Loading...</div>;
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'profile', label: 'Restaurant Profile', icon: <Store className="h-4 w-4" /> },
-    { id: 'appearance', label: 'Appearance', icon: <Palette className="h-4 w-4" /> },
-    { id: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4" /> },
-    { id: 'localization', label: 'Localization', icon: <Globe className="h-4 w-4" /> },
+  const tabs = [
+    { id: 'profile' as Tab, label: 'Restaurant Profile', icon: <Store className="h-4 w-4" /> },
+    { id: 'appearance' as Tab, label: 'Appearance', icon: <Palette className="h-4 w-4" /> },
+    { id: 'notifications' as Tab, label: 'Notifications', icon: <Bell className="h-4 w-4" /> },
+    { id: 'localization' as Tab, label: 'Localization', icon: <Globe className="h-4 w-4" /> },
   ];
 
   return (
@@ -172,7 +172,6 @@ export default function SettingsPage() {
                   <input type="number" min="0" max="100" step="0.5" value={settings.service_tax} onChange={(e) => updateField('service_tax', e.target.value)} className="w-full rounded-lg border border-[rgb(var(--color-border-default))] px-3 py-2.5 text-sm text-[rgb(var(--color-input-text))] bg-[rgb(var(--color-input-bg))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-brand-500))]" />
                   <p className="mt-1 text-xs text-[rgb(var(--color-text-tertiary))]">Service charge applied to all orders</p>
                 </div>
-              </div>
               </div>
             </div>
 
