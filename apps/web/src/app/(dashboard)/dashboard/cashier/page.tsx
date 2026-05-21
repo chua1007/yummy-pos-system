@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, Banknote, Smartphone, Receipt, Trash2, Printer, Check, X } from 'lucide-react';
+import { CreditCard, Banknote, Smartphone, Receipt, Trash2, Printer, Check, X, UserCircle, Lock } from 'lucide-react';
 
 interface OrderItem { id: string; name: string; quantity: number; unit_price: number; subtotal: number; }
 interface Order { id: string; order_number: string; type: string; status: string; table_number: string | null; customer_name: string; subtotal: number; tax_amount: number; total: number; items: OrderItem[]; created_at: string; }
 interface Invoice { id: string; invoice_number: string; customer_name: string; table_number: string; subtotal: number; tax_amount: number; rounding: number; total: number; payment_method: string; cashier_name: string; items: { name: string; quantity: number; unit_price: number; subtotal: number }[]; created_at: string; }
+interface CashierInfo { id: string; name: string; position: string; }
 
 const paymentMethods = [
   { id: 'cash', label: 'Cash', icon: Banknote, color: 'bg-green-100 text-green-700 border-green-300' },
@@ -24,6 +25,41 @@ export default function CashierPage() {
   const [selectedPayment, setSelectedPayment] = useState('cash');
   const [processing, setProcessing] = useState(false);
   const [completedInvoice, setCompletedInvoice] = useState<Invoice | null>(null);
+
+  // Cashier switching
+  const [activeCashier, setActiveCashier] = useState<CashierInfo | null>(null);
+  const [cashierList, setCashierList] = useState<CashierInfo[]>([]);
+  const [showCashierSwitch, setShowCashierSwitch] = useState(false);
+  const [switchPasscode, setSwitchPasscode] = useState('');
+  const [switchTarget, setSwitchTarget] = useState<CashierInfo | null>(null);
+  const [switchError, setSwitchError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/staff').then((r) => r.json()).then((data) => {
+      const active = data.filter((c: any) => c.is_active);
+      setCashierList(active);
+    }).catch(() => {});
+  }, []);
+
+  const handleSwitchCashier = async () => {
+    if (!switchTarget) return;
+    setSwitchError('');
+    const res = await fetch('/api/staff/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cashier_id: switchTarget.id, passcode: switchPasscode }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setActiveCashier(data.cashier);
+      setShowCashierSwitch(false);
+      setSwitchPasscode('');
+      setSwitchTarget(null);
+    } else {
+      const err = await res.json();
+      setSwitchError(err.error || 'Incorrect passcode');
+    }
+  };
 
   const fetchOrders = async () => {
     const res = await fetch('/api/orders?status=all');
@@ -54,7 +90,7 @@ export default function CashierPage() {
     const res = await fetch('/api/invoices', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: selectedOrder.id, payment_method: selectedPayment }),
+      body: JSON.stringify({ order_id: selectedOrder.id, payment_method: selectedPayment, cashier_name: activeCashier?.name || undefined }),
     });
 
     if (res.ok) {
@@ -79,10 +115,88 @@ export default function CashierPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[rgb(var(--color-text-primary))]">Cashier</h1>
-        <p className="text-sm text-[rgb(var(--color-text-secondary))]">Process payments and generate receipts</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[rgb(var(--color-text-primary))]">Cashier</h1>
+          <p className="text-sm text-[rgb(var(--color-text-secondary))]">Process payments and generate receipts</p>
+        </div>
+        {/* Active Cashier Indicator + Switch */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg border border-[rgb(var(--color-border-default))] bg-[rgb(var(--color-surface-secondary))] px-3 py-2">
+            <UserCircle className="h-5 w-5 text-[rgb(var(--color-brand-500))]" />
+            <div>
+              <p className="text-xs text-[rgb(var(--color-text-tertiary))]">Active Cashier</p>
+              <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{activeCashier?.name || 'Not set'}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowCashierSwitch(true)}
+            className="rounded-lg border border-[rgb(var(--color-border-default))] px-3 py-2 text-sm font-medium text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))] transition-colors"
+          >
+            Switch
+          </button>
+        </div>
       </div>
+
+      {/* Cashier Switch Modal */}
+      <AnimatePresence>
+        {showCashierSwitch && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => { setShowCashierSwitch(false); setSwitchPasscode(''); setSwitchTarget(null); setSwitchError(''); }}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-xl bg-[rgb(var(--color-surface-primary))] p-6 shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-[rgb(var(--color-text-primary))]">Switch Cashier</h2>
+                <button onClick={() => { setShowCashierSwitch(false); setSwitchPasscode(''); setSwitchTarget(null); setSwitchError(''); }}><X className="h-5 w-5 text-[rgb(var(--color-text-tertiary))]" /></button>
+              </div>
+
+              {cashierList.length === 0 ? (
+                <p className="text-sm text-[rgb(var(--color-text-tertiary))] text-center py-4">No cashiers added yet. Go to Staff page to add cashiers.</p>
+              ) : !switchTarget ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-[rgb(var(--color-text-secondary))] mb-3">Select cashier:</p>
+                  {cashierList.map((c) => (
+                    <button key={c.id} onClick={() => setSwitchTarget(c)} className={`w-full flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-[rgb(var(--color-surface-secondary))] ${activeCashier?.id === c.id ? 'border-[rgb(var(--color-brand-500))] bg-[rgb(var(--color-brand-50))]' : 'border-[rgb(var(--color-border-default))]'}`}>
+                      <div className="h-9 w-9 rounded-full bg-[rgb(var(--color-brand-100))] flex items-center justify-center text-sm font-bold text-[rgb(var(--color-brand-700))]">{c.name.charAt(0)}</div>
+                      <div>
+                        <p className="text-sm font-medium text-[rgb(var(--color-text-primary))]">{c.name}</p>
+                        <p className="text-xs text-[rgb(var(--color-text-tertiary))]">{c.position}</p>
+                      </div>
+                      {activeCashier?.id === c.id && <span className="ml-auto text-xs text-[rgb(var(--color-brand-500))] font-medium">Current</span>}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 rounded-lg bg-[rgb(var(--color-surface-secondary))] p-3">
+                    <div className="h-10 w-10 rounded-full bg-[rgb(var(--color-brand-100))] flex items-center justify-center text-sm font-bold text-[rgb(var(--color-brand-700))]">{switchTarget.name.charAt(0)}</div>
+                    <div>
+                      <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{switchTarget.name}</p>
+                      <p className="text-xs text-[rgb(var(--color-text-tertiary))]">{switchTarget.position}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[rgb(var(--color-text-secondary))] flex items-center gap-1"><Lock className="h-3.5 w-3.5" /> Enter 4-digit passcode</label>
+                    <input
+                      type="password"
+                      maxLength={4}
+                      value={switchPasscode}
+                      onChange={(e) => setSwitchPasscode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && switchPasscode.length === 4) handleSwitchCashier(); }}
+                      placeholder="••••"
+                      autoFocus
+                      className="mt-1 w-full rounded-lg border border-[rgb(var(--color-border-default))] px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-brand-500))]"
+                    />
+                  </div>
+                  {switchError && <p className="text-sm text-red-500 text-center">{switchError}</p>}
+                  <div className="flex gap-3">
+                    <button onClick={() => { setSwitchTarget(null); setSwitchPasscode(''); setSwitchError(''); }} className="flex-1 rounded-lg border border-[rgb(var(--color-border-default))] py-2.5 text-sm font-medium text-[rgb(var(--color-text-secondary))]">Back</button>
+                    <button onClick={handleSwitchCashier} disabled={switchPasscode.length !== 4} className="flex-1 rounded-lg bg-[rgb(var(--color-brand-500))] py-2.5 text-sm font-medium text-white disabled:opacity-50">Confirm</button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Left: Pending Orders */}

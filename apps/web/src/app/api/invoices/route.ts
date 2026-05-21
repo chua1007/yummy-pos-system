@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
   const insertItem = db.prepare('INSERT INTO invoice_items (id, invoice_id, name, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?, ?)');
 
   const createInvoice = db.transaction(() => {
-    insertInvoice.run(invoiceId, tenantId, orderId, invoiceNumber, order.customer_name, order.table_number, subtotal, taxAmount, discountAmount, rounding, total, body.payment_method || 'cash', user?.name || 'Cashier', user?.id || null, body.notes || null);
+    insertInvoice.run(invoiceId, tenantId, orderId, invoiceNumber, order.customer_name, order.table_number, subtotal, taxAmount, discountAmount, rounding, total, body.payment_method || 'cash', body.cashier_name || user?.name || 'Cashier', user?.id || null, body.notes || null);
 
     for (const item of orderItems) {
       insertItem.run(uuid(), invoiceId, item.name, item.quantity, item.unit_price, item.subtotal);
