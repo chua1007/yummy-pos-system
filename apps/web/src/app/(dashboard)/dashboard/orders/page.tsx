@@ -6,7 +6,7 @@ import { Plus, Search, X, Check, ShoppingBag } from 'lucide-react';
 
 interface OrderItem { id: string; name: string; quantity: number; unit_price: number; subtotal: number; }
 interface Order { id: string; order_number: string; type: string; status: string; table_number: string | null; customer_name: string; subtotal: number; tax_amount: number; total: number; created_at: string; items: OrderItem[]; }
-interface MenuItem { id: string; name: string; price: number; image: string; category_id: string; }
+interface MenuItem { id: string; name: string; price: number; image: string; image_url: string | null; category_id: string; }
 
 const statusStyles: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -237,7 +237,11 @@ function NewOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                   onClick={() => addToCart(item)}
                   className="flex items-center gap-2 rounded-lg border border-[rgb(var(--color-border-default))] p-3 text-left hover:bg-[rgb(var(--color-surface-secondary))] transition-colors"
                 >
-                  <span className="text-2xl">{item.image}</span>
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} className="h-10 w-10 rounded object-cover shrink-0" />
+                  ) : (
+                    <span className="text-2xl shrink-0">{item.image}</span>
+                  )}
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-[rgb(var(--color-text-primary))] truncate">{item.name}</p>
                     <p className="text-xs text-[rgb(var(--color-brand-500))]">RM {(item.price / 100).toFixed(2)}</p>
