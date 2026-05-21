@@ -32,14 +32,18 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
   const [submitting, setSubmitting] = useState(false);
   const [tableName, setTableName] = useState('');
   const [tableTenantId, setTableTenantId] = useState<string | null>(null);
+  const [restaurantName, setRestaurantName] = useState('Restaurant');
+  const [restaurantLogo, setRestaurantLogo] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch tax rates
     fetch('/api/tax-rates').then((r) => r.json()).then((d) => { setTaxRate(d.total_tax_rate); }).catch(() => {});
-    // Fetch menu (with tenant filter from table)
-    fetch(`/api/tables/${params.tableId}`).then((r) => r.json()).then((data) => {
+    // Fetch table info + restaurant details
+    fetch(`/api/tables/${params.tableId}/info`).then((r) => r.json()).then((data) => {
       if (data.table_number) setTableName(data.table_number);
       if (data.tenant_id) setTableTenantId(data.tenant_id);
+      if (data.restaurant_name) setRestaurantName(data.restaurant_name);
+      if (data.restaurant_logo) setRestaurantLogo(data.restaurant_logo);
       // Fetch menu for this tenant
       const menuUrl = data.tenant_id ? `/api/menu?tenant_id=${data.tenant_id}` : '/api/menu';
       fetch(menuUrl).then((r) => r.json()).then((menuData) => {
@@ -48,7 +52,6 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
         setLoading(false);
       });
     }).catch(() => {
-      // Fallback: load all menu
       fetch('/api/menu').then((r) => r.json()).then((data) => {
         setCategories(data.categories);
         setItems(data.items.filter((i: MenuItem) => i.is_available));
@@ -143,9 +146,14 @@ export default function CustomerOrderPage({ params }: { params: { tableId: strin
       <div className="sticky top-0 z-10 bg-white border-b shadow-sm">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">🍽️ Yummy</h1>
-              {tableName && <p className="text-xs text-gray-500">Table {tableName}</p>}
+            <div className="flex items-center gap-2">
+              {restaurantLogo ? (
+                <img src={restaurantLogo} alt={restaurantName} className="h-8 w-8 rounded-lg object-cover" />
+              ) : null}
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">{restaurantName}</h1>
+                {tableName && <p className="text-xs text-gray-500">Table {tableName}</p>}
+              </div>
             </div>
             <button
               onClick={() => setShowCart(true)}

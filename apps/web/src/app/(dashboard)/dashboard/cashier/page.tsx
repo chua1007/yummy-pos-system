@@ -305,12 +305,13 @@ export default function CashierPage() {
               {/* Process Button */}
               <button
                 onClick={processPayment}
-                disabled={processing}
+                disabled={processing || !activeCashier}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-[rgb(var(--color-brand-500))] py-3.5 text-sm font-semibold text-white shadow-md hover:bg-[rgb(var(--color-brand-600))] active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 <Receipt className="h-5 w-5" />
-                {processing ? 'Processing...' : `Pay RM ${(selectedOrder.total / 100).toFixed(2)}`}
+                {!activeCashier ? 'Select a cashier first' : processing ? 'Processing...' : `Pay RM ${(selectedOrder.total / 100).toFixed(2)}`}
               </button>
+              {!activeCashier && <p className="text-xs text-red-400 text-center mt-2">⚠️ You must switch to a cashier before processing payment</p>}
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-[rgb(var(--color-border-default))] p-12 text-center text-[rgb(var(--color-text-tertiary))]">
