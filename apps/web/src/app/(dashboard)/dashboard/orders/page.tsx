@@ -44,6 +44,18 @@ export default function OrdersPage() {
     setOrders(orders.map((o) => (o.id === updated.id ? updated : o)));
   };
 
+  const removeOrderItem = async (orderId: string, itemId: string) => {
+    if (!confirm('Remove this item from the order?')) return;
+    const res = await fetch(`/api/orders/${orderId}/items/${itemId}`, { method: 'DELETE' });
+    if (res.ok) {
+      const updated = await res.json();
+      setOrders(orders.map((o) => o.id === updated.id ? updated : o));
+    } else {
+      const err = await res.json();
+      alert(err.error || 'Cannot remove item');
+    }
+  };
+
   const getNextStatus = (current: string) => {
     const idx = statusFlow.indexOf(current);
     return idx < statusFlow.length - 1 ? statusFlow[idx + 1] : null;
@@ -127,11 +139,22 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Items */}
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 space-y-1">
                     {order.items.map((item) => (
-                      <span key={item.id} className="rounded bg-[rgb(var(--color-surface-secondary))] px-2 py-1 text-xs text-[rgb(var(--color-text-secondary))]">
-                        {item.quantity}× {item.name}
-                      </span>
+                      <div key={item.id} className="flex items-center justify-between rounded bg-[rgb(var(--color-surface-secondary))] px-2.5 py-1.5">
+                        <span className="text-xs text-[rgb(var(--color-text-secondary))]">
+                          {item.quantity}× {item.name} <span className="text-[rgb(var(--color-text-tertiary))]">· RM {(item.subtotal / 100).toFixed(2)}</span>
+                        </span>
+                        {order.status !== 'completed' && order.status !== 'cancelled' && order.items.length > 1 && (
+                          <button
+                            onClick={() => removeOrderItem(order.id, item.id)}
+                            className="ml-2 rounded p-0.5 text-[rgb(var(--color-text-tertiary))] hover:text-red-500 hover:bg-red-50"
+                            title="Remove this item"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
                     ))}
                   </div>
 
